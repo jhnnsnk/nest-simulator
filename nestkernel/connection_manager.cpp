@@ -118,6 +118,8 @@ nest::ConnectionManager::initialize()
   // The following line is executed by all processes, no need to communicate
   // this change in delays.
   min_delay_ = max_delay_ = 1;
+
+  compressed_spike_data_.resize( kernel().model_manager.get_num_synapse_prototypes() );
 }
 
 void
@@ -1428,4 +1430,19 @@ nest::ConnectionManager::unset_have_connections_changed( const thread tid )
   {
     have_connections_changed_[ tid ].set_false();
   }
+}
+
+void
+nest::ConnectionManager::collect_compressed_spike_data( const thread tid )
+{
+  // collect unique sources per thread with n > 2
+  source_table_.collect_compressable_sources( tid );
+#pragma omp barrier
+#pragma omp single
+  {
+    // merge compressable sources across all threads
+    source_table_.merge_compressable_sources();
+    // fill compressed spike data with corresponding entries
+    source_table_.fill_compressed_spike_data( compressed_spike_data_ );
+  } // of omp single; implicit barrier
 }

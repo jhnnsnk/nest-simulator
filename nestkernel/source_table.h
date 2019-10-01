@@ -37,6 +37,7 @@
 #include "per_thread_bool_indicator.h"
 #include "source.h"
 #include "source_table_position.h"
+#include "spike_data.h"
 
 // Includes from libnestutil
 #include "block_vector.h"
@@ -44,6 +45,20 @@
 
 namespace nest
 {
+
+// stores target thread and index in compressed spike data table; only used
+// during network construction
+struct CompressedSpikeData
+{
+  thread tid_;
+  index idx_;
+
+CompressedSpikeData( const thread tid, const index idx )
+  : tid_( tid )
+  , idx_( idx )
+  {
+  }
+};
 
 class TargetData;
 
@@ -119,9 +134,14 @@ private:
   bool previous_entry_has_same_source_( const SourceTablePosition& current_position,
     const Source& current_source ) const;
 
-  void populate_target_data_fields_( const SourceTablePosition& current_position,
+  bool populate_target_data_fields_( const SourceTablePosition& current_position,
     const Source& current_source,
     TargetData& next_target_data ) const;
+
+  // maps for temporary storage during spike data compression; will be empty
+  // after filling ConnectionManager::compressed_spike_data
+  std::vector< std::vector< std::map< index, SpikeData > > > compressable_sources_;
+  std::vector< std::map< index, CompressedSpikeData > > compressed_spike_data_map_;
 
 public:
   SourceTable();
@@ -274,6 +294,13 @@ public:
    * long number.
    */
   index pack_source_node_id_and_syn_id( const index source_node_id, const synindex syn_id ) const;
+
+  // creates maps of sources with more than one thread-local target
+  void collect_compressable_sources( const thread tid );
+  // creates maps of sources with more than one process-local target
+  void merge_compressable_sources();
+  // fills the compressed_spike_data structure in ConnectionManager
+  void fill_compressed_spike_data( std::vector< std::vector< std::vector< SpikeData > > >& compressed_spike_data );
 };
 
 inline void

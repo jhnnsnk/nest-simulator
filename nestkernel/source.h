@@ -44,6 +44,7 @@ private:
   bool processed_ : 1;                  //!< whether this target has already been moved
                                         //!< to the MPI buffer
   bool primary_ : 1;
+  bool compressed_: 1;          //!< whether this source uses compressed spike delivery
 
 public:
   Source();
@@ -82,6 +83,9 @@ public:
    */
   bool is_disabled() const;
 
+  void set_compressed( const bool compressed );
+  bool is_compressed() const;
+
   friend bool operator<( const Source& lhs, const Source& rhs );
   friend bool operator>( const Source& lhs, const Source& rhs );
   friend bool operator==( const Source& lhs, const Source& rhs );
@@ -91,6 +95,7 @@ inline Source::Source()
   : node_id_( 0 )
   , processed_( false )
   , primary_( true )
+  , compressed_( false )
 {
 }
 
@@ -98,6 +103,7 @@ inline Source::Source( const uint64_t node_id, const bool is_primary )
   : node_id_( node_id )
   , processed_( false )
   , primary_( is_primary )
+  , compressed_( false )
 {
   assert( node_id <= MAX_NODE_ID );
 }
@@ -149,6 +155,17 @@ inline bool
 Source::is_disabled() const
 {
   return node_id_ == DISABLED_NODE_ID;
+}
+
+inline void
+Source::set_compressed( const bool compressed )
+{
+  compressed_ = compressed;
+}
+inline bool
+Source::is_compressed() const
+{
+  return compressed_;
 }
 
 inline bool operator<( const Source& lhs, const Source& rhs )
