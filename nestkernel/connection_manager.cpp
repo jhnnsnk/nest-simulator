@@ -119,7 +119,6 @@ nest::ConnectionManager::initialize()
   // this change in delays.
   min_delay_ = max_delay_ = 1;
 
-  compressed_spike_data_.resize( kernel().model_manager.get_num_synapse_prototypes() );
 }
 
 void

@@ -141,7 +141,7 @@ private:
   // maps for temporary storage during spike data compression; will be empty
   // after filling ConnectionManager::compressed_spike_data
   std::vector< std::vector< std::map< index, SpikeData > > > compressable_sources_;
-  std::vector< std::map< index, CompressedSpikeData > > compressed_spike_data_map_;
+  std::vector< std::vector< std::map< index, CompressedSpikeData > > > compressed_spike_data_map_;
 
 public:
   SourceTable();
