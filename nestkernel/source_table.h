@@ -140,7 +140,7 @@ private:
 
   // maps for temporary storage during spike data compression; will be empty
   // after filling ConnectionManager::compressed_spike_data
-  std::vector< std::vector< std::map< index, SpikeData > > > compressable_sources_;
+  std::vector< std::vector< std::map< index, SpikeData > > > compressible_sources_;
   std::vector< std::vector< std::map< index, CompressedSpikeData > > > compressed_spike_data_map_;
 
 public:
@@ -296,9 +296,9 @@ public:
   index pack_source_node_id_and_syn_id( const index source_node_id, const synindex syn_id ) const;
 
   // creates maps of sources with more than one thread-local target
-  void collect_compressable_sources( const thread tid );
+  void collect_compressible_sources( const thread tid );
   // creates maps of sources with more than one process-local target
-  void merge_compressable_sources();
+  void merge_compressible_sources();
   // fills the compressed_spike_data structure in ConnectionManager
   void fill_compressed_spike_data( std::vector< std::vector< std::vector< SpikeData > > >& compressed_spike_data );
 };

@@ -49,7 +49,7 @@ nest::SourceTable::initialize()
   saved_entry_point_.initialize( num_threads, false );
   current_positions_.resize( num_threads );
   saved_positions_.resize( num_threads );
-  compressable_sources_.resize( num_threads );
+  compressible_sources_.resize( num_threads );
   compressed_spike_data_map_.resize( num_threads );
 
 #pragma omp parallel
@@ -57,7 +57,7 @@ nest::SourceTable::initialize()
     const thread tid = kernel().vp_manager.get_thread_id();
     sources_[ tid ].resize( 0 );
     resize_sources( tid );
-    compressable_sources_[ tid ].resize( 0 );
+    compressible_sources_[ tid ].resize( 0 );
     compressed_spike_data_map_[ tid ].resize( 0 );
   } // of omp parallel
 }
@@ -70,14 +70,14 @@ nest::SourceTable::finalize()
     if ( is_cleared_[ tid ].is_false() )
     {
       clear( tid );
-      compressable_sources_[ tid ].clear();
+      compressible_sources_[ tid ].clear();
     }
   }
 
   sources_.clear();
   current_positions_.clear();
   saved_positions_.clear();
-  compressable_sources_.clear();
+  compressible_sources_.clear();
 }
 
 bool
@@ -439,9 +439,9 @@ nest::SourceTable::get_next_target_data( const thread tid,
 }
 
 void
-nest::SourceTable::collect_compressable_sources( const thread tid )
+nest::SourceTable::collect_compressible_sources( const thread tid )
 {
-  compressable_sources_[ tid ].resize( kernel().model_manager.get_num_synapse_prototypes(), std::map< index, SpikeData >() );
+  compressible_sources_[ tid ].resize( kernel().model_manager.get_num_synapse_prototypes(), std::map< index, SpikeData >() );
   for ( synindex syn_id = 0; syn_id < sources_[ tid ].size(); ++syn_id )
   {
     index lcid = 0;
@@ -453,7 +453,7 @@ nest::SourceTable::collect_compressable_sources( const thread tid )
       if ( ( ( lcid + 1 ) < sources_[ tid ][ syn_id ].size() )
            and ( sources_[ tid ][ syn_id ][ lcid + 1 ].get_node_id() == sources_[ tid ][ syn_id ][ lcid ].get_node_id() ) )
       {
-        compressable_sources_[ tid ][ syn_id ].insert( std::make_pair( sources_[ tid ][ syn_id ][ lcid ].get_node_id(),
+        compressible_sources_[ tid ][ syn_id ].insert( std::make_pair( sources_[ tid ][ syn_id ][ lcid ].get_node_id(),
                                                                        SpikeData( tid, syn_id, lcid, 0 ) ) );
       }
 
@@ -470,14 +470,14 @@ nest::SourceTable::collect_compressable_sources( const thread tid )
 }
 
 void
-nest::SourceTable::merge_compressable_sources()
+nest::SourceTable::merge_compressible_sources()
 {
-  for ( thread tid = 0; tid < compressable_sources_.size(); ++tid )
+  for ( thread tid = 0; tid < compressible_sources_.size(); ++tid )
   {
-    for ( synindex syn_id = 0; syn_id < compressable_sources_[ tid ].size(); ++syn_id )
+    for ( synindex syn_id = 0; syn_id < compressible_sources_[ tid ].size(); ++syn_id )
     {
-      for ( auto it = compressable_sources_[ tid ][ syn_id ].begin();
-            it != compressable_sources_[ tid ][ syn_id ].end(); )
+      for ( auto it = compressible_sources_[ tid ][ syn_id ].begin();
+            it != compressible_sources_[ tid ][ syn_id ].end(); )
       {
         if ( it->second.is_complete_marker() )  // we've already counted this entry
         {
@@ -490,10 +490,10 @@ nest::SourceTable::merge_compressable_sources()
         // count on how many other threads this source has more than two targets
         // (see heuristic above)
         size_t n_occurences = 1;
-        for ( thread other_tid = tid + 1; other_tid < compressable_sources_.size(); ++other_tid )
+        for ( thread other_tid = tid + 1; other_tid < compressible_sources_.size(); ++other_tid )
         {
-          auto other_it = compressable_sources_[ other_tid ][ syn_id ].find( it->first );
-          if ( other_it != compressable_sources_[ other_tid ][ syn_id ].end() )
+          auto other_it = compressible_sources_[ other_tid ][ syn_id ].find( it->first );
+          if ( other_it != compressible_sources_[ other_tid ][ syn_id ].end() )
           {
             ++n_occurences;
             other_it->second.set_complete_marker(); // mark entries that were
@@ -504,13 +504,13 @@ nest::SourceTable::merge_compressable_sources()
         }
 
         // remove this source from all maps since it has not enough targets on
-        // this process to qualify as compressable
+        // this process to qualify as compressible
         if ( n_occurences < 2 ) // TODO this should be settable by the user
         {
-          it = compressable_sources_[ tid ][ syn_id ].erase( it );
-          for ( thread other_tid = tid + 1; other_tid < compressable_sources_.size(); ++other_tid )
+          it = compressible_sources_[ tid ][ syn_id ].erase( it );
+          for ( thread other_tid = tid + 1; other_tid < compressible_sources_.size(); ++other_tid )
           {
-            compressable_sources_[ other_tid ][ syn_id ].erase( it->first );
+            compressible_sources_[ other_tid ][ syn_id ].erase( it->first );
           }
         }
         else
@@ -526,14 +526,14 @@ void
 nest::SourceTable::fill_compressed_spike_data( std::vector< std::vector< std::vector< SpikeData > > >& compressed_spike_data )
 {
   compressed_spike_data.resize( kernel().model_manager.get_num_synapse_prototypes() );
-  for ( thread tid = 0; tid < compressable_sources_.size(); ++tid )
+  for ( thread tid = 0; tid < compressible_sources_.size(); ++tid )
   {
     compressed_spike_data_map_[ tid ].resize( kernel().model_manager.get_num_synapse_prototypes(), std::map< index, CompressedSpikeData >() );
-    for ( synindex syn_id = 0; syn_id < compressable_sources_[ tid ].size(); ++syn_id )
+    for ( synindex syn_id = 0; syn_id < compressible_sources_[ tid ].size(); ++syn_id )
     {
       std::vector< SpikeData > spike_data;  // will hold all target positions on this process
-      for ( auto it = compressable_sources_[ tid ][ syn_id ].begin();
-            it != compressable_sources_[ tid ][ syn_id ].end(); )
+      for ( auto it = compressible_sources_[ tid ][ syn_id ].begin();
+            it != compressible_sources_[ tid ][ syn_id ].end(); )
       {
         spike_data.clear();
 
@@ -543,20 +543,20 @@ nest::SourceTable::fill_compressed_spike_data( std::vector< std::vector< std::ve
         compressed_spike_data_map_[ tid ][ syn_id ].insert( std::make_pair( it->first, CompressedSpikeData( tid, compressed_spike_data[ syn_id ].size() ) ) );
 
         // add target positions on all other threads
-        for ( thread other_tid = tid + 1; other_tid < compressable_sources_.size(); ++other_tid )
+        for ( thread other_tid = tid + 1; other_tid < compressible_sources_.size(); ++other_tid )
         {
-          auto other_it = compressable_sources_[ other_tid ][ syn_id ].find( it->first );
-          if ( other_it != compressable_sources_[ other_tid ][ syn_id ].end() )
+          auto other_it = compressible_sources_[ other_tid ][ syn_id ].find( it->first );
+          if ( other_it != compressible_sources_[ other_tid ][ syn_id ].end() )
           {
             spike_data.push_back( other_it->second );
             sources_[ other_it->second.get_tid() ][ other_it->second.get_syn_id() ][ other_it->second.get_lcid() ].set_compressed( true );
-            compressable_sources_[ other_tid ][ syn_id ].erase( other_it );
+            compressible_sources_[ other_tid ][ syn_id ].erase( other_it );
           }
         }
 
         compressed_spike_data[ syn_id ].push_back( spike_data );
 
-        it = compressable_sources_[ tid ][ syn_id ].erase( it );
+        it = compressible_sources_[ tid ][ syn_id ].erase( it );
       }
     }
   }
