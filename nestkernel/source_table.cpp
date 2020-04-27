@@ -450,12 +450,12 @@ nest::SourceTable::collect_compressible_sources( const thread tid )
       // simple heuristic: if more than one connection from the same source
       // exist on this thread, it is likely that the same source has a target on
       // another thread; we collect only these for potential compression
-      if ( ( ( lcid + 1 ) < sources_[ tid ][ syn_id ].size() )
-           and ( sources_[ tid ][ syn_id ][ lcid + 1 ].get_node_id() == sources_[ tid ][ syn_id ][ lcid ].get_node_id() ) )
-      {
+      //if ( ( ( lcid + 1 ) < sources_[ tid ][ syn_id ].size() )
+      //     and ( sources_[ tid ][ syn_id ][ lcid + 1 ].get_node_id() == sources_[ tid ][ syn_id ][ lcid ].get_node_id() ) )
+      //{
         compressible_sources_[ tid ][ syn_id ].insert( std::make_pair( sources_[ tid ][ syn_id ][ lcid ].get_node_id(),
                                                                        SpikeData( tid, syn_id, lcid, 0 ) ) );
-      }
+      //}
 
       // find next source with different node_id (assumes sorted sources)
       const index old_source_node_id = sources_[ tid ][ syn_id ][ lcid ].get_node_id();
