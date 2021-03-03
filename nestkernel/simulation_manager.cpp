@@ -742,6 +742,13 @@ nest::SimulationManager::update_()
   {
     const thread tid = kernel().vp_manager.get_thread_id();
 
+#ifdef TIMER
+    if ( tid == 0 and kernel().mpi_manager.get_rank() < 30 )
+    {
+      sw_total.start();
+    }
+#endif
+
     do
     {
       if ( print_time_ )
