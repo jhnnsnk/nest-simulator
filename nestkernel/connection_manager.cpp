@@ -95,6 +95,7 @@ nest::ConnectionManager::initialize()
   connections_.resize( num_threads );
   secondary_recv_buffer_pos_.resize( num_threads );
   sort_connections_by_source_ = true;
+  compressed_spike_data_.resize( 0 );
 
   have_connections_changed_.initialize( num_threads, false );
   check_primary_connections_.initialize( num_threads, false );
@@ -135,6 +136,7 @@ nest::ConnectionManager::finalize()
   delete_connections_();
   std::vector< std::vector< ConnectorBase* > >().swap( connections_ );
   std::vector< std::vector< std::vector< size_t > > >().swap( secondary_recv_buffer_pos_ );
+  compressed_spike_data_.clear();
 }
 
 void
@@ -1482,7 +1484,11 @@ nest::ConnectionManager::collect_compressed_spike_data( const thread tid )
       throw KernelException( "Can not use compressed spikes without sorting connections by source." );
     }
 
-#pragma omp barrier
+#pragma omp single
+    {
+      source_table_.resize_compressible_sources();
+    } // of omp single; implicit barrier
+
     source_table_.collect_compressible_sources( tid );
 #pragma omp barrier
 #pragma omp single

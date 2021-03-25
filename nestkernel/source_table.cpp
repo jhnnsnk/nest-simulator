@@ -71,6 +71,7 @@ nest::SourceTable::finalize()
     {
       clear( tid );
       compressible_sources_[ tid ].clear();
+      compressed_spike_data_map_[ tid ].clear();
     }
   }
 
@@ -78,6 +79,7 @@ nest::SourceTable::finalize()
   current_positions_.clear();
   saved_positions_.clear();
   compressible_sources_.clear();
+  compressed_spike_data_map_.clear();
 }
 
 bool
@@ -336,9 +338,10 @@ nest::SourceTable::populate_target_data_fields_( const SourceTablePosition& curr
       // it has a defined value; however, this value is _not_ used
       // anywhere when using compressed spikes
       target_fields.set_tid( 0 );
-      auto it_idx = compressed_spike_data_map_[ current_position.tid ][ current_position.syn_id ].find(
-        current_source.get_node_id() );
-      if ( it_idx != compressed_spike_data_map_[ current_position.tid ][ current_position.syn_id ].end() )
+      auto it_idx = compressed_spike_data_map_.at( current_position.tid )
+                      .at( current_position.syn_id )
+                      .find( current_source.get_node_id() );
+      if ( it_idx != compressed_spike_data_map_.at( current_position.tid ).at( current_position.syn_id ).end() )
       {
         // WARNING: no matter how tempting, do not try to remove this
         // entry from the compressed_spike_data_map_; if the MPI buffer
@@ -447,10 +450,19 @@ nest::SourceTable::get_next_target_data( const thread tid,
 }
 
 void
+nest::SourceTable::resize_compressible_sources()
+{
+  for ( thread tid = 0; tid < compressible_sources_.size(); ++tid )
+  {
+    compressible_sources_[ tid ].clear();
+    compressible_sources_[ tid ].resize(
+      kernel().model_manager.get_num_synapse_prototypes(), std::map< index, SpikeData >() );
+  }
+}
+
+void
 nest::SourceTable::collect_compressible_sources( const thread tid )
 {
-  compressible_sources_[ tid ].resize(
-    kernel().model_manager.get_num_synapse_prototypes(), std::map< index, SpikeData >() );
   for ( synindex syn_id = 0; syn_id < sources_[ tid ].size(); ++syn_id )
   {
     index lcid = 0;
@@ -475,10 +487,12 @@ void
 nest::SourceTable::fill_compressed_spike_data(
   std::vector< std::vector< std::vector< SpikeData > > >& compressed_spike_data )
 {
+  compressed_spike_data.clear();
   compressed_spike_data.resize( kernel().model_manager.get_num_synapse_prototypes() );
 
   for ( thread tid = 0; tid < compressible_sources_.size(); ++tid )
   {
+    compressed_spike_data_map_[ tid ].clear();
     compressed_spike_data_map_[ tid ].resize(
       kernel().model_manager.get_num_synapse_prototypes(), std::map< index, size_t >() );
   }

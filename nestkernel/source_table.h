@@ -274,6 +274,8 @@ public:
    */
   index pack_source_node_id_and_syn_id( const index source_node_id, const synindex syn_id ) const;
 
+  void resize_compressible_sources();
+
   // creates maps of sources with more than one thread-local target
   void collect_compressible_sources( const thread tid );
   // fills the compressed_spike_data structure in ConnectionManager
