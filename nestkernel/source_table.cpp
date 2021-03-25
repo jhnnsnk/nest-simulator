@@ -330,7 +330,7 @@ nest::SourceTable::populate_target_data_fields_( const SourceTablePosition& curr
 
     TargetDataFields& target_fields = next_target_data.target_data;
     target_fields.set_syn_id( current_position.syn_id );
-    if ( current_source.is_compressed() )
+    if ( kernel().connection_manager.get_use_compressed_spikes() )
     {
       target_fields.set_tid( MAX_TID );  // use MAX_TID as marker for compressed spikes
       auto it_idx = compressed_spike_data_map_[ current_position.tid ][ current_position.syn_id ].find( current_source.get_node_id() );
@@ -478,7 +478,6 @@ nest::SourceTable::fill_compressed_spike_data( std::vector< std::vector< std::ve
 
         // add target position on this thread
         spike_data.push_back( it->second );
-        sources_[ it->second.get_tid() ][ it->second.get_syn_id() ][ it->second.get_lcid() ].set_compressed( true );
         compressed_spike_data_map_[ tid ][ syn_id ].insert( std::make_pair( it->first, CompressedSpikeData( tid, compressed_spike_data[ syn_id ].size() ) ) );
 
         // add target positions on all other threads
@@ -488,7 +487,6 @@ nest::SourceTable::fill_compressed_spike_data( std::vector< std::vector< std::ve
           if ( other_it != compressible_sources_[ other_tid ][ syn_id ].end() )
           {
             spike_data.push_back( other_it->second );
-            sources_[ other_it->second.get_tid() ][ other_it->second.get_syn_id() ][ other_it->second.get_lcid() ].set_compressed( true );
             compressible_sources_[ other_tid ][ syn_id ].erase( other_it );
           }
         }
