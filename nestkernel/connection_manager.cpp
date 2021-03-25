@@ -1489,5 +1489,5 @@ nest::ConnectionManager::collect_compressed_spike_data( const thread tid )
     {
       source_table_.fill_compressed_spike_data( compressed_spike_data_ );
     }
-  }  // of omp single; implicit barrier
+  } // of omp single; implicit barrier
 }

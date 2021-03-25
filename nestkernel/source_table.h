@@ -280,7 +280,6 @@ public:
   void fill_compressed_spike_data( std::vector< std::vector< std::vector< SpikeData > > >& compressed_spike_data );
 
   void clear_compressed_spike_data_map( const thread tid );
-
 };
 
 inline void

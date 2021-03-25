@@ -336,14 +336,15 @@ nest::SourceTable::populate_target_data_fields_( const SourceTablePosition& curr
       // it has a defined value; however, this value is _not_ used
       // anywhere when using compressed spikes
       target_fields.set_tid( 0 );
-      auto it_idx = compressed_spike_data_map_[ current_position.tid ][ current_position.syn_id ].find( current_source.get_node_id() );
+      auto it_idx = compressed_spike_data_map_[ current_position.tid ][ current_position.syn_id ].find(
+        current_source.get_node_id() );
       if ( it_idx != compressed_spike_data_map_[ current_position.tid ][ current_position.syn_id ].end() )
       {
-	// WARNING: no matter how tempting, do not try to remove this
-	// entry from the compressed_spike_data_map_; if the MPI buffer
-	// is already full, this entry will need to be communicated the
-	// next MPI comm round, which, naturally, is not possible if it
-	// has been removed
+        // WARNING: no matter how tempting, do not try to remove this
+        // entry from the compressed_spike_data_map_; if the MPI buffer
+        // is already full, this entry will need to be communicated the
+        // next MPI comm round, which, naturally, is not possible if it
+        // has been removed
         target_fields.set_lcid( it_idx->second );
       }
       else // another thread is responsible for communicating this compressed source
@@ -448,20 +449,21 @@ nest::SourceTable::get_next_target_data( const thread tid,
 void
 nest::SourceTable::collect_compressible_sources( const thread tid )
 {
-  compressible_sources_[ tid ].resize( kernel().model_manager.get_num_synapse_prototypes(), std::map< index, SpikeData >() );
+  compressible_sources_[ tid ].resize(
+    kernel().model_manager.get_num_synapse_prototypes(), std::map< index, SpikeData >() );
   for ( synindex syn_id = 0; syn_id < sources_[ tid ].size(); ++syn_id )
   {
     index lcid = 0;
     while ( lcid < sources_[ tid ][ syn_id ].size() )
     {
-      compressible_sources_[ tid ][ syn_id ].insert( std::make_pair( sources_[ tid ][ syn_id ][ lcid ].get_node_id(),
-								     SpikeData( tid, syn_id, lcid, 0 ) ) );
+      compressible_sources_[ tid ][ syn_id ].insert(
+        std::make_pair( sources_[ tid ][ syn_id ][ lcid ].get_node_id(), SpikeData( tid, syn_id, lcid, 0 ) ) );
 
       // find next source with different node_id (assumes sorted sources)
       const index old_source_node_id = sources_[ tid ][ syn_id ][ lcid ].get_node_id();
       ++lcid;
       while ( ( lcid < sources_[ tid ][ syn_id ].size() )
-              and ( sources_[ tid ][ syn_id ][ lcid ].get_node_id() == old_source_node_id ) )
+        and ( sources_[ tid ][ syn_id ][ lcid ].get_node_id() == old_source_node_id ) )
       {
         ++lcid;
       }
@@ -470,19 +472,21 @@ nest::SourceTable::collect_compressible_sources( const thread tid )
 }
 
 void
-nest::SourceTable::fill_compressed_spike_data( std::vector< std::vector< std::vector< SpikeData > > >& compressed_spike_data )
+nest::SourceTable::fill_compressed_spike_data(
+  std::vector< std::vector< std::vector< SpikeData > > >& compressed_spike_data )
 {
   compressed_spike_data.resize( kernel().model_manager.get_num_synapse_prototypes() );
 
   for ( thread tid = 0; tid < compressible_sources_.size(); ++tid )
   {
-    compressed_spike_data_map_[ tid ].resize( kernel().model_manager.get_num_synapse_prototypes(), std::map< index, size_t >() );
+    compressed_spike_data_map_[ tid ].resize(
+      kernel().model_manager.get_num_synapse_prototypes(), std::map< index, size_t >() );
   }
 
-  std::vector< SpikeData > spike_data;  // will hold spike data
-					// (target positions) for each
-					// unique source on this
-					// process
+  std::vector< SpikeData > spike_data; // will hold spike data
+                                       // (target positions) for each
+                                       // unique source on this
+                                       // process
 
   for ( thread tid = 0; tid < compressible_sources_.size(); ++tid )
   {
@@ -507,14 +511,15 @@ nest::SourceTable::fill_compressed_spike_data( std::vector< std::vector< std::ve
           }
         }
 
-	// WARNING: store index in compressed_spike_data_map on thread
-	// responsible for communicating information to presynaptic
-	// side during connection construction; this tries to balance
-	// memory usage of this data structure across threads
-	const thread source_rank = kernel().mpi_manager.get_process_id_of_node_id( it->first );
-	const thread responsible_tid = source_rank / kernel().vp_manager.get_num_assigned_ranks_per_thread();
+        // WARNING: store index in compressed_spike_data_map on thread
+        // responsible for communicating information to presynaptic
+        // side during connection construction; this tries to balance
+        // memory usage of this data structure across threads
+        const thread source_rank = kernel().mpi_manager.get_process_id_of_node_id( it->first );
+        const thread responsible_tid = source_rank / kernel().vp_manager.get_num_assigned_ranks_per_thread();
 
-	compressed_spike_data_map_[ responsible_tid ][ syn_id ].insert( std::make_pair( it->first, compressed_spike_data[ syn_id ].size() ) );
+        compressed_spike_data_map_[ responsible_tid ][ syn_id ].insert(
+          std::make_pair( it->first, compressed_spike_data[ syn_id ].size() ) );
         compressed_spike_data[ syn_id ].push_back( spike_data );
 
         it = compressible_sources_[ tid ][ syn_id ].erase( it );

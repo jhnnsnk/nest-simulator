@@ -625,20 +625,21 @@ EventDeliveryManager::deliver_events_( const thread tid, const std::vector< Spik
 
       if ( not kernel().connection_manager.get_use_compressed_spikes() )
       {
-	if ( spike_data.get_tid() == tid )
-	{
-	  const index syn_id = spike_data.get_syn_id();
-	  const index lcid = spike_data.get_lcid();
-	  const index source_node_id = kernel().connection_manager.get_source_node_id( tid, syn_id, lcid );
-	  se.set_sender_node_id( source_node_id );
+        if ( spike_data.get_tid() == tid )
+        {
+          const index syn_id = spike_data.get_syn_id();
+          const index lcid = spike_data.get_lcid();
+          const index source_node_id = kernel().connection_manager.get_source_node_id( tid, syn_id, lcid );
+          se.set_sender_node_id( source_node_id );
 
-	  kernel().connection_manager.send( tid, syn_id, lcid, cm, se );
-	}
+          kernel().connection_manager.send( tid, syn_id, lcid, cm, se );
+        }
       }
       else
       {
         const index syn_id = spike_data.get_syn_id();
-        const index idx = spike_data.get_lcid();  // for compressed spikes lcid holds the index in the compressed_spike_data structure
+        const index idx =
+          spike_data.get_lcid(); // for compressed spikes lcid holds the index in the compressed_spike_data structure
         const std::vector< SpikeData >& compressed_spike_data =
           kernel().connection_manager.get_compressed_spike_data( syn_id, idx );
         for ( auto it = compressed_spike_data.cbegin(); it != compressed_spike_data.cend(); ++it )
