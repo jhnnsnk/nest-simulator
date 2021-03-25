@@ -519,6 +519,9 @@ nest::SourceTable::fill_compressed_spike_data( std::vector< std::vector< std::ve
 
         it = compressible_sources_[ tid ][ syn_id ].erase( it );
       }
+      compressible_sources_[ tid ][ syn_id ].clear();
     }
+    compressible_sources_[ tid ].clear();
   }
+  compressible_sources_.clear();
 }

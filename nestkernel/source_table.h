@@ -125,8 +125,6 @@ private:
     const thread source_rank,
     TargetData& next_target_data ) const;
 
-  // maps for temporary storage during spike data compression; will be empty
-  // after filling ConnectionManager::compressed_spike_data
   std::vector< std::vector< std::map< index, SpikeData > > > compressible_sources_;
   std::vector< std::vector< std::map< index, size_t > > > compressed_spike_data_map_;
 
@@ -280,6 +278,9 @@ public:
   void collect_compressible_sources( const thread tid );
   // fills the compressed_spike_data structure in ConnectionManager
   void fill_compressed_spike_data( std::vector< std::vector< std::vector< SpikeData > > >& compressed_spike_data );
+
+  void clear_compressed_spike_data_map( const thread tid );
+
 };
 
 inline void
@@ -466,6 +467,15 @@ SourceTable::pack_source_node_id_and_syn_id( const index source_node_id, const s
   // syn_id is maximally 256, so shifting node ID by 8 bits and storing
   // syn_id in the lowest 8 leads to a unique number
   return ( source_node_id << 8 ) + syn_id;
+}
+
+inline void
+SourceTable::clear_compressed_spike_data_map( const thread tid )
+{
+  for ( synindex syn_id = 0; syn_id < compressed_spike_data_map_[ tid ].size(); ++syn_id )
+  {
+    compressed_spike_data_map_[ tid ][ syn_id ].clear();
+  }
 }
 
 } // namespace nest

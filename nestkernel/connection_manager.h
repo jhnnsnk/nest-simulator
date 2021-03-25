@@ -89,6 +89,7 @@ public:
   void compute_target_data_buffer_size();
   void compute_compressed_secondary_recv_buffer_positions( const thread tid );
   void collect_compressed_spike_data( const thread tid );
+  void clear_compressed_spike_data_map( const thread tid );
 
   /**
    * Add a connectivity rule, i.e. the respective ConnBuilderFactory.
@@ -846,6 +847,12 @@ inline const std::vector< SpikeData >&
 ConnectionManager::get_compressed_spike_data( const synindex syn_id, const index idx )
 {
   return compressed_spike_data_[ syn_id ][ idx ];
+}
+
+inline void
+ConnectionManager::clear_compressed_spike_data_map( const thread tid )
+{
+  source_table_.clear_compressed_spike_data_map( tid );
 }
 
 } // namespace nest

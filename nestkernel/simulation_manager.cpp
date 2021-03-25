@@ -764,6 +764,11 @@ nest::SimulationManager::update_connection_infrastructure( const thread tid )
     kernel().connection_manager.compress_secondary_send_buffer_pos( tid );
   }
 
+  if ( kernel().connection_manager.get_use_compressed_spikes() )
+  {
+    kernel().connection_manager.clear_compressed_spike_data_map( tid );
+  }
+
 #pragma omp single
   {
     kernel().node_manager.set_have_nodes_changed( false );
