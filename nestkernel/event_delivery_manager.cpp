@@ -620,19 +620,22 @@ EventDeliveryManager::deliver_events_( const thread tid, const std::vector< Spik
     {
       const SpikeDataT& spike_data = recv_buffer[ rank * send_recv_count_spike_data_per_rank + i ];
 
-      if ( spike_data.get_tid() == tid )
+      if ( not kernel().connection_manager.get_use_compressed_spikes() )
       {
-        se.set_stamp( prepared_timestamps[ spike_data.get_lag() ] );
-        se.set_offset( spike_data.get_offset() );
+	if ( spike_data.get_tid() == tid )
+	{
+	  se.set_stamp( prepared_timestamps[ spike_data.get_lag() ] );
+	  se.set_offset( spike_data.get_offset() );
 
-        const index syn_id = spike_data.get_syn_id();
-        const index lcid = spike_data.get_lcid();
-        const index source_node_id = kernel().connection_manager.get_source_node_id( tid, syn_id, lcid );
-        se.set_sender_node_id( source_node_id );
+	  const index syn_id = spike_data.get_syn_id();
+	  const index lcid = spike_data.get_lcid();
+	  const index source_node_id = kernel().connection_manager.get_source_node_id( tid, syn_id, lcid );
+	  se.set_sender_node_id( source_node_id );
 
-        kernel().connection_manager.send( tid, syn_id, lcid, cm, se );
+	  kernel().connection_manager.send( tid, syn_id, lcid, cm, se );
+	}
       }
-      else if ( spike_data.get_tid() == MAX_TID )  // handle compressed spikes
+      else
       {
         se.set_stamp( prepared_timestamps[ spike_data.get_lag() ] );
         se.set_offset( spike_data.get_offset() );

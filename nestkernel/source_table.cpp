@@ -332,10 +332,18 @@ nest::SourceTable::populate_target_data_fields_( const SourceTablePosition& curr
     target_fields.set_syn_id( current_position.syn_id );
     if ( kernel().connection_manager.get_use_compressed_spikes() )
     {
-      target_fields.set_tid( MAX_TID );  // use MAX_TID as marker for compressed spikes
+      // WARNING: we set the tid field here to zero just to make sure
+      // it has a defined value; however, this value is _not_ used
+      // anywhere when using compressed spikes
+      target_fields.set_tid( 0 );
       auto it_idx = compressed_spike_data_map_[ current_position.tid ][ current_position.syn_id ].find( current_source.get_node_id() );
       if ( it_idx != compressed_spike_data_map_[ current_position.tid ][ current_position.syn_id ].end() )
       {
+	// WARNING: no matter how tempting, do not try to remove this
+	// entry from the compressed_spike_data_map_; if the MPI buffer
+	// is already full, this entry will need to be communicated the
+	// next MPI comm round, which, naturally, is not possible if it
+	// has been removed
         target_fields.set_lcid( it_idx->second.idx_ );
       }
       else // another thread is responsible for communicating this compressed source
