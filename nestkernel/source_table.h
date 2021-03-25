@@ -292,8 +292,6 @@ public:
 
   // creates maps of sources with more than one thread-local target
   void collect_compressible_sources( const thread tid );
-  // creates maps of sources with more than one process-local target
-  void merge_compressible_sources();
   // fills the compressed_spike_data structure in ConnectionManager
   void fill_compressed_spike_data( std::vector< std::vector< std::vector< SpikeData > > >& compressed_spike_data );
 };

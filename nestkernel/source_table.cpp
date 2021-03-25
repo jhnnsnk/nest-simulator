@@ -446,15 +446,8 @@ nest::SourceTable::collect_compressible_sources( const thread tid )
     index lcid = 0;
     while ( lcid < sources_[ tid ][ syn_id ].size() )
     {
-      // simple heuristic: if more than one connection from the same source
-      // exist on this thread, it is likely that the same source has a target on
-      // another thread; we collect only these for potential compression
-      //if ( ( ( lcid + 1 ) < sources_[ tid ][ syn_id ].size() )
-      //     and ( sources_[ tid ][ syn_id ][ lcid + 1 ].get_node_id() == sources_[ tid ][ syn_id ][ lcid ].get_node_id() ) )
-      //{
-        compressible_sources_[ tid ][ syn_id ].insert( std::make_pair( sources_[ tid ][ syn_id ][ lcid ].get_node_id(),
-                                                                       SpikeData( tid, syn_id, lcid, 0 ) ) );
-      //}
+      compressible_sources_[ tid ][ syn_id ].insert( std::make_pair( sources_[ tid ][ syn_id ][ lcid ].get_node_id(),
+								     SpikeData( tid, syn_id, lcid, 0 ) ) );
 
       // find next source with different node_id (assumes sorted sources)
       const index old_source_node_id = sources_[ tid ][ syn_id ][ lcid ].get_node_id();
@@ -463,59 +456,6 @@ nest::SourceTable::collect_compressible_sources( const thread tid )
               and ( sources_[ tid ][ syn_id ][ lcid ].get_node_id() == old_source_node_id ) )
       {
         ++lcid;
-      }
-    }
-  }
-}
-
-void
-nest::SourceTable::merge_compressible_sources()
-{
-  for ( thread tid = 0; tid < compressible_sources_.size(); ++tid )
-  {
-    for ( synindex syn_id = 0; syn_id < compressible_sources_[ tid ].size(); ++syn_id )
-    {
-      for ( auto it = compressible_sources_[ tid ][ syn_id ].begin();
-            it != compressible_sources_[ tid ][ syn_id ].end(); )
-      {
-        if ( it->second.is_complete_marker() )  // we've already counted this entry
-        {
-          ++it;
-          continue;
-        }
-
-        it->second.set_complete_marker();
-
-        // count on how many other threads this source has more than two targets
-        // (see heuristic above)
-        size_t n_occurences = 1;
-        for ( thread other_tid = tid + 1; other_tid < compressible_sources_.size(); ++other_tid )
-        {
-          auto other_it = compressible_sources_[ other_tid ][ syn_id ].find( it->first );
-          if ( other_it != compressible_sources_[ other_tid ][ syn_id ].end() )
-          {
-            ++n_occurences;
-            other_it->second.set_complete_marker(); // mark entries that were
-                                                    // already counted so we can
-                                                    // skip them when reaching
-                                                    // them in the outer loop
-          }
-        }
-
-        // remove this source from all maps since it has not enough targets on
-        // this process to qualify as compressible
-        if ( n_occurences < 2 ) // TODO this should be settable by the user
-        {
-          it = compressible_sources_[ tid ][ syn_id ].erase( it );
-          for ( thread other_tid = tid + 1; other_tid < compressible_sources_.size(); ++other_tid )
-          {
-            compressible_sources_[ other_tid ][ syn_id ].erase( it->first );
-          }
-        }
-        else
-        {
-          ++it;
-        }
       }
     }
   }
