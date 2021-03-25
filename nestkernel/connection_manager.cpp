@@ -1462,3 +1462,19 @@ nest::ConnectionManager::unset_have_connections_changed( const thread tid )
     have_connections_changed_[ tid ].set_false();
   }
 }
+
+
+void
+nest::ConnectionManager::collect_compressed_spike_data( const thread tid )
+{
+  // collect unique sources per thread with n > 2
+  source_table_.collect_compressible_sources( tid );
+#pragma omp barrier
+#pragma omp single
+  {
+    // merge compressible sources across all threads
+    source_table_.merge_compressible_sources();
+    // fill compressed spike data with corresponding entries
+    source_table_.fill_compressed_spike_data( compressed_spike_data_ );
+  } // of omp single; implicit barrier
+}

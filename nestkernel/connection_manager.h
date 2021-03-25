@@ -40,6 +40,7 @@
 #include "nest_types.h"
 #include "per_thread_bool_indicator.h"
 #include "source_table.h"
+#include "spike_data.h"
 #include "target_table.h"
 #include "target_table_devices.h"
 
@@ -87,6 +88,7 @@ public:
 
   void compute_target_data_buffer_size();
   void compute_compressed_secondary_recv_buffer_positions( const thread tid );
+  void collect_compressed_spike_data( const thread tid );
 
   /**
    * Add a connectivity rule, i.e. the respective ConnBuilderFactory.
@@ -397,6 +399,8 @@ public:
   // start and stop in high-level connect functions in nestmodule.cpp and nest.cpp
   Stopwatch sw_construction_connect;
 
+  const std::vector< SpikeData >& get_compressed_spike_data( const synindex syn_id, const index idx );
+
 private:
   size_t get_num_target_data( const thread tid ) const;
 
@@ -539,6 +543,8 @@ private:
    * Internally arranged in a 3d structure: threads|synapses|node IDs
    */
   SourceTable source_table_;
+
+  std::vector< std::vector< std::vector< SpikeData > > > compressed_spike_data_;
 
   /**
    * Stores absolute position in receive buffer of secondary events.
@@ -824,6 +830,12 @@ inline void
 nest::ConnectionManager::set_has_get_connections_been_called( const bool has_get_connections_been_called )
 {
   has_get_connections_been_called_ = has_get_connections_been_called;
+}
+
+inline const std::vector< SpikeData >&
+ConnectionManager::get_compressed_spike_data( const synindex syn_id, const index idx )
+{
+  return compressed_spike_data_[ syn_id ][ idx ];
 }
 
 } // namespace nest
