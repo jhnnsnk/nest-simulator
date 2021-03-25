@@ -468,8 +468,9 @@ nest::SourceTable::collect_compressible_sources( const thread tid )
     index lcid = 0;
     while ( lcid < sources_[ tid ][ syn_id ].size() )
     {
-      compressible_sources_[ tid ][ syn_id ].insert(
-        std::make_pair( sources_[ tid ][ syn_id ][ lcid ].get_node_id(), SpikeData( tid, syn_id, lcid, 0 ) ) );
+      const std::pair< index, SpikeData > source_node_id_to_spike_data =
+        std::make_pair( sources_[ tid ][ syn_id ][ lcid ].get_node_id(), SpikeData( tid, syn_id, lcid, 0 ) );
+      compressible_sources_[ tid ][ syn_id ].insert( source_node_id_to_spike_data );
 
       // find next source with different node_id (assumes sorted sources)
       const index old_source_node_id = sources_[ tid ][ syn_id ][ lcid ].get_node_id();
