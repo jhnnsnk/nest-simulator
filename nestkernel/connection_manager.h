@@ -317,6 +317,8 @@ public:
    */
   bool get_sort_connections_by_source() const;
 
+  bool get_use_compressed_spikes() const;
+
   /**
    * Sorts connections in the presynaptic infrastructure by increasing
    * source node ID.
@@ -604,6 +606,8 @@ private:
   //! Whether to sort connections by source node ID.
   bool sort_connections_by_source_;
 
+  bool use_compressed_spikes_;
+
   //! Whether primary connections (spikes) exist.
   bool has_primary_connections_;
 
@@ -785,6 +789,12 @@ inline bool
 ConnectionManager::get_sort_connections_by_source() const
 {
   return sort_connections_by_source_;
+}
+
+inline bool
+ConnectionManager::get_use_compressed_spikes() const
+{
+  return use_compressed_spikes_;
 }
 
 inline double

@@ -69,6 +69,7 @@ nest::ConnectionManager::ConnectionManager()
   , have_connections_changed_()
   , has_get_connections_been_called_( false )
   , sort_connections_by_source_( true )
+  , use_compressed_spikes_( true )
   , has_primary_connections_( false )
   , check_primary_connections_()
   , secondary_connections_exist_( false )
@@ -159,6 +160,13 @@ nest::ConnectionManager::set_status( const DictionaryDatum& d )
       "If structural plasticity is enabled, sort_connections_by_source can not "
       "be set to false." );
   }
+
+  updateValue< bool >( d, names::use_compressed_spikes, use_compressed_spikes_ );
+  if ( use_compressed_spikes_ and not sort_connections_by_source_ )
+  {
+    throw KernelException( "Can not use compressed spikes without sorting connections by source." );
+  }
+
   //  Need to update the saved values if we have changed the delay bounds.
   if ( d->known( names::min_delay ) or d->known( names::max_delay ) )
   {
@@ -1467,12 +1475,19 @@ nest::ConnectionManager::unset_have_connections_changed( const thread tid )
 void
 nest::ConnectionManager::collect_compressed_spike_data( const thread tid )
 {
-  // collect unique sources per thread with n > 2
-  source_table_.collect_compressible_sources( tid );
+  if ( use_compressed_spikes_ )
+  {
+    if ( not sort_connections_by_source_ )
+    {
+      throw KernelException( "Can not use compressed spikes without sorting connections by source." );
+    }
+
+#pragma omp barrier
+    source_table_.collect_compressible_sources( tid );
 #pragma omp barrier
 #pragma omp single
-  {
-    // fill compressed spike data with corresponding entries
-    source_table_.fill_compressed_spike_data( compressed_spike_data_ );
-  } // of omp single; implicit barrier
+    {
+      source_table_.fill_compressed_spike_data( compressed_spike_data_ );
+    }
+  }  // of omp single; implicit barrier
 }
