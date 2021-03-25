@@ -46,20 +46,6 @@
 namespace nest
 {
 
-// stores target thread and index in compressed spike data table; only used
-// during network construction
-struct CompressedSpikeData
-{
-  thread tid_;
-  index idx_;
-
-CompressedSpikeData( const thread tid, const index idx )
-  : tid_( tid )
-  , idx_( idx )
-  {
-  }
-};
-
 class TargetData;
 
 /**
@@ -142,7 +128,7 @@ private:
   // maps for temporary storage during spike data compression; will be empty
   // after filling ConnectionManager::compressed_spike_data
   std::vector< std::vector< std::map< index, SpikeData > > > compressible_sources_;
-  std::vector< std::vector< std::map< index, CompressedSpikeData > > > compressed_spike_data_map_;
+  std::vector< std::vector< std::map< index, size_t > > > compressed_spike_data_map_;
 
 public:
   SourceTable();
