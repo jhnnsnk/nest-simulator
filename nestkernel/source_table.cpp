@@ -540,7 +540,5 @@ nest::SourceTable::fill_compressed_spike_data(
       }
       compressible_sources_[ tid ][ syn_id ].clear();
     }
-    compressible_sources_[ tid ].clear();
   }
-  compressible_sources_.clear();
 }
