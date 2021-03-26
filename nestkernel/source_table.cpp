@@ -502,6 +502,7 @@ nest::SourceTable::fill_compressed_spike_data(
                                        // (target positions) for each
                                        // unique source on this
                                        // process
+  std::vector< thread > target_threads;
 
   for ( thread tid = 0; tid < compressible_sources_.size(); ++tid )
   {
@@ -511,9 +512,11 @@ nest::SourceTable::fill_compressed_spike_data(
             it != compressible_sources_[ tid ][ syn_id ].end(); )
       {
         spike_data.clear();
+        target_threads.clear();
 
         // add target position on this thread
         spike_data.push_back( it->second );
+        target_threads.push_back( tid );
 
         // add target positions on all other threads
         for ( thread other_tid = tid + 1; other_tid < compressible_sources_.size(); ++other_tid )
@@ -523,15 +526,16 @@ nest::SourceTable::fill_compressed_spike_data(
           {
             spike_data.push_back( other_it->second );
             compressible_sources_[ other_tid ][ syn_id ].erase( other_it );
+            target_threads.push_back( other_tid );
           }
         }
 
-        // WARNING: store index in compressed_spike_data_map on thread
-        // responsible for communicating information to presynaptic
-        // side during connection construction; this tries to balance
-        // memory usage of this data structure across threads
-        const thread source_rank = kernel().mpi_manager.get_process_id_of_node_id( it->first );
-        const thread responsible_tid = source_rank / kernel().vp_manager.get_num_assigned_ranks_per_thread();
+        // WARNING: store index in compressed_spike_data_map on a
+        // randomly selected thread which houses targets for this
+        // source; this tries to balance memory usage of this data
+        // structure across threads
+        const thread responsible_tid =
+          target_threads[ kernel().rng_manager.get_grng()->ulrand( target_threads.size() ) ];
 
         compressed_spike_data_map_[ responsible_tid ][ syn_id ].insert(
           std::make_pair( it->first, compressed_spike_data[ syn_id ].size() ) );
