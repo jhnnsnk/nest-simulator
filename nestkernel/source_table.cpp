@@ -502,9 +502,9 @@ nest::SourceTable::fill_compressed_spike_data(
                                        // (target positions) for each
                                        // unique source on this
                                        // process
-  size_t thread_idx = 0; // pseudo-random thread selector to balance
-			 // memory usage across threads of
-			 // compressed_spike_data_map_
+  size_t thread_idx = 0;               // pseudo-random thread selector to balance
+  // memory usage across threads of
+  // compressed_spike_data_map_
 
   for ( thread tid = 0; tid < compressible_sources_.size(); ++tid )
   {
@@ -535,7 +535,7 @@ nest::SourceTable::fill_compressed_spike_data(
         // this source; this tries to balance memory usage of this
         // data structure across threads
         const thread responsible_tid = spike_data[ thread_idx % spike_data.size() ].get_tid();
-	++thread_idx;
+        ++thread_idx;
 
         compressed_spike_data_map_[ responsible_tid ][ syn_id ].insert(
           std::make_pair( it->first, compressed_spike_data[ syn_id ].size() ) );
