@@ -535,7 +535,7 @@ nest::SourceTable::fill_compressed_spike_data(
         // source; this tries to balance memory usage of this data
         // structure across threads
         const thread responsible_tid =
-          target_threads[ kernel().rng_manager.get_grng()->ulrand( target_threads.size() ) ];
+          target_threads[ kernel().rng_manager.get_rng( tid )->ulrand( target_threads.size() ) ];
 
         compressed_spike_data_map_[ responsible_tid ][ syn_id ].insert(
           std::make_pair( it->first, compressed_spike_data[ syn_id ].size() ) );
