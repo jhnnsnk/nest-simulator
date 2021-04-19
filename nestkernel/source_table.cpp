@@ -452,7 +452,7 @@ nest::SourceTable::get_next_target_data( const thread tid,
 void
 nest::SourceTable::resize_compressible_sources()
 {
-  for ( thread tid = 0; tid < compressible_sources_.size(); ++tid )
+  for ( thread tid = 0; tid < static_cast< thread >( compressible_sources_.size() ); ++tid )
   {
     compressible_sources_[ tid ].clear();
     compressible_sources_[ tid ].resize(
@@ -491,7 +491,7 @@ nest::SourceTable::fill_compressed_spike_data(
   compressed_spike_data.clear();
   compressed_spike_data.resize( kernel().model_manager.get_num_synapse_prototypes() );
 
-  for ( thread tid = 0; tid < compressible_sources_.size(); ++tid )
+  for ( thread tid = 0; tid < static_cast< thread >( compressible_sources_.size() ); ++tid )
   {
     compressed_spike_data_map_[ tid ].clear();
     compressed_spike_data_map_[ tid ].resize(
@@ -506,7 +506,7 @@ nest::SourceTable::fill_compressed_spike_data(
   // memory usage across threads of
   // compressed_spike_data_map_
 
-  for ( thread tid = 0; tid < compressible_sources_.size(); ++tid )
+  for ( thread tid = 0; tid < static_cast< thread >( compressible_sources_.size() ); ++tid )
   {
     for ( synindex syn_id = 0; syn_id < compressible_sources_[ tid ].size(); ++syn_id )
     {
@@ -519,7 +519,8 @@ nest::SourceTable::fill_compressed_spike_data(
         spike_data.push_back( it->second );
 
         // add target positions on all other threads
-        for ( thread other_tid = tid + 1; other_tid < compressible_sources_.size(); ++other_tid )
+        for ( thread other_tid = tid + 1; other_tid < static_cast< thread >( compressible_sources_.size() );
+              ++other_tid )
         {
           auto other_it = compressible_sources_[ other_tid ][ syn_id ].find( it->first );
           if ( other_it != compressible_sources_[ other_tid ][ syn_id ].end() )
