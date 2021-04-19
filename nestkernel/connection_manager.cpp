@@ -166,7 +166,7 @@ nest::ConnectionManager::set_status( const DictionaryDatum& d )
   updateValue< bool >( d, names::use_compressed_spikes, use_compressed_spikes_ );
   if ( use_compressed_spikes_ and not sort_connections_by_source_ )
   {
-    throw KernelException( "Can not use compressed spikes without sorting connections by source." );
+    throw KernelException( "Spike compression requires sort_connections_by_source to be true." );
   }
 
   //  Need to update the saved values if we have changed the delay bounds.
@@ -1481,7 +1481,7 @@ nest::ConnectionManager::collect_compressed_spike_data( const thread tid )
   {
     if ( not sort_connections_by_source_ )
     {
-      throw KernelException( "Can not use compressed spikes without sorting connections by source." );
+      throw KernelException( "Spike compression requires sort_connections_by_source to be true." );
     }
 
 #pragma omp single
